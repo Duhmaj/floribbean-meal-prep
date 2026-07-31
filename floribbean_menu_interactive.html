@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floribbean Grill — Monthly Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#FAF7F2;--cream-dark:#F2EDE4;--stone:#E8E0D4;
+  --orange:#F97316;--orange-dark:#EA6A0A;--orange-light:#FEF0E6;
+  --dark:#0D0D0D;--ink:#1A1714;--muted:#6B6560;
+  --border:#DDD5C8;--white:#FFFFFF;--green:#2D6A4F;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* HEADER */
+.header{text-align:center;padding:2.5rem 1.5rem 1.5rem;border-bottom:1px solid var(--border);background:var(--cream)}
+.header-logo-img{max-width:320px;height:auto;margin-bottom:0.5rem}
+.header-tag{font-size:0.72rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+.header-title{font-size:clamp(0.85rem,2vw,0.95rem);color:var(--muted);font-weight:400}
+
+/* WEEK TABS */
+.tabs-wrap{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--border);padding:0 1.5rem;box-shadow:0 2px 12px rgba(13,13,13,0.06)}
+.tabs{display:flex;max-width:900px;margin:0 auto;gap:0}
+.tab{flex:1;padding:1rem 0.5rem;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body)}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+
+/* WEEK PANELS */
+.weeks{max-width:900px;margin:0 auto;padding:2rem 1.5rem 4rem;background:var(--cream)}
+.week-panel{display:none}
+.week-panel.active{display:block}
+.week-header{margin-bottom:1.75rem}
+.week-label{font-size:0.68rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--orange);margin-bottom:0.35rem}
+.week-title{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;color:var(--dark);margin-bottom:0.35rem}
+.week-sub{font-size:0.85rem;color:var(--muted)}
+
+/* DAY LABELS */
+.days{display:flex;flex-direction:column;gap:0.75rem}
+.day-row{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s}
+.day-row:hover{border-color:rgba(249,115,22,0.4);box-shadow:0 4px 16px rgba(249,115,22,0.08)}
+.day-row.open{border-color:var(--orange)}
+
+/* MEAL TRIGGER */
+.meal-trigger{display:grid;grid-template-columns:60px 1fr auto;align-items:center;gap:1rem;padding:1rem 1.25rem;cursor:pointer;user-select:none}
+.day-label{font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--orange);background:rgba(249,115,22,0.12);padding:0.35rem 0.5rem;border-radius:5px;text-align:center}
+.meal-info{min-width:0}
+.meal-name{font-weight:600;font-size:0.95rem;color:var(--dark);margin-bottom:0.2rem;line-height:1.3}
+.meal-sides{font-size:0.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meal-chevron{color:var(--muted);font-size:1rem;transition:transform 0.25s;flex-shrink:0}
+.day-row.open .meal-chevron{transform:rotate(180deg);color:var(--orange)}
+
+/* DROPDOWN PANEL */
+.meal-dropdown{display:none;padding:0 1.25rem 1.25rem}
+.day-row.open .meal-dropdown{display:block}
+.dd-divider{border:none;border-top:1px solid var(--stone);margin-bottom:1.25rem}
+
+.dd-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+@media(max-width:540px){.dd-grid{grid-template-columns:1fr}}
+
+/* COMPONENTS */
+.dd-section-title{font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--orange);margin-bottom:0.6rem}
+.comp-list{display:flex;flex-direction:column;gap:0.35rem}
+.comp-item{display:flex;align-items:center;justify-content:space-between;font-size:0.82rem}
+.comp-name{color:var(--ink)}
+.comp-amount{font-weight:600;color:var(--dark);font-size:0.78rem}
+.comp-tag{font-size:0.6rem;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:0.35rem}
+.comp-tag.protein{background:rgba(249,115,22,0.2);color:var(--orange)}
+.comp-tag.starch{background:rgba(45,106,79,0.25);color:#4ade80}
+.comp-tag.veg{background:rgba(34,197,94,0.15);color:#86efac}
+.comp-tag.sauce{background:rgba(139,92,246,0.2);color:#c4b5fd}
+
+/* MACROS */
+.macro-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:1.25rem}
+.macro-box{background:var(--cream-dark);border:1px solid var(--border);border-radius:7px;padding:0.6rem 0.5rem;text-align:center}
+.macro-val{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--orange);line-height:1}
+.macro-label{font-size:0.6rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-top:0.2rem}
+
+/* HEALTH BENEFITS */
+.benefits-list{display:flex;flex-direction:column;gap:0.4rem}
+.benefit-item{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.8rem;color:var(--muted);line-height:1.5}
+.benefit-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:0.45rem}
+
+/* SAUCE TAG */
+.sauce-pill{display:inline-flex;align-items:center;gap:0.35rem;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);color:var(--orange);font-size:0.7rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:100px;margin-bottom:1rem}
+.sauce-pill::before{content:'';width:5px;height:5px;background:var(--orange);border-radius:50%}
+
+/* BACK LINK */
+.back-link{display:inline-flex;align-items:center;gap:0.5rem;color:var(--muted);font-size:0.8rem;text-decoration:none;padding:1rem 1.5rem;transition:color 0.2s;background:var(--cream)}
+.back-link:hover{color:var(--orange)}
+
+/* FOOTER */
+.menu-footer{border-top:1px solid var(--border);padding:2rem 1.5rem;text-align:center;max-width:900px;margin:0 auto;background:var(--cream)}
+.menu-footer-text{font-size:0.78rem;color:var(--muted);line-height:1.8}
+.menu-footer-text a{color:var(--orange);text-decoration:none}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="floribbean_landing_v4.html">← Back to home</a>
+
+<div class="header">
+  <img src="Copy_of_floribbeanlogo.png" alt="Floribbean Grill" class="header-logo-img">
+  <div class="header-tag">Latin & Soul Fusion · Orlando, FL</div>
+  <div class="header-title">Monthly Meal Prep Menu · Tap any meal to see full breakdown, macros & health benefits</div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="showWeek(0)">Week 1</button>
+    <button class="tab" onclick="showWeek(1)">Week 2</button>
+    <button class="tab" onclick="showWeek(2)">Week 3</button>
+    <button class="tab" onclick="showWeek(3)">Week 4</button>
+  </div>
+</div>
+
+<div class="weeks">
+
+<!-- ═══ WEEK 1 ═══ -->
+<div class="week-panel active" id="week-0">
+  <div class="week-header">
+    <div class="week-label">Week 1 · Mon–Sun</div>
+    <div class="week-title">Bold Foundations.</div>
+    <div class="week-sub">Steak, herb chicken, Latin soul, global fusion — 7 unique meals, no repeats.</div>
+  </div>
+  <div class="days" id="days-0"></div>
+</div>
+
+<!-- ═══ WEEK 2 ═══ -->
+<div class="week-panel" id="week-1">
+  <div class="week-header">
+    <div class="week-label">Week 2 · Mon–Sun</div>
+    <div class="week-title">Global Heat.</div>
+    <div class="week-sub">Mediterranean, harissa, pesto, teriyaki — 7 unique meals, no repeats.</div>
+  </div>
+  <div class="days" id="days-1"></div>
+</div>
+
+<!-- ═══ WEEK 3 ═══ -->
+<div class="week-panel" id="week-2">
+  <div class="week-header">
+    <div class="week-label">Week 3 · Mon–Sun</div>
+    <div class="week-title">Fire & Flavor.</div>
+    <div class="week-sub">Southwest, steak fajitas, jerk, hoisin — 7 unique meals, no repeats.</div>
+  </div>
+  <div class="days" id="days-2"></div>
+</div>
+
+<!-- ═══ WEEK 4 ═══ -->
+<div class="week-panel" id="week-3">
+  <div class="week-header">
+    <div class="week-label">Week 4 · Mon–Sun</div>
+    <div class="week-title">Comfort & Craft.</div>
+    <div class="week-sub">Ropa vieja, garlic butter steak, rasta pasta, sriracha shrimp — 7 unique meals, no repeats.</div>
+  </div>
+  <div class="days" id="days-3"></div>
+</div>
+
+</div>
+
+<div class="menu-footer">
+  <div class="menu-footer-text">
+    New menu every week · 6oz Protein · 4oz Starch · 4oz Veg · Sauces on the side<br>
+    <a href="tel:+14078508783">(407) 850-8783</a> · <a href="mailto:keystonemanaged@gmail.com">keystonemanaged@gmail.com</a> · <a href="https://www.instagram.com/thefloribbeangrill/" target="_blank">@thefloribbeangrill</a>
+  </div>
+</div>
+
+<script>
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+const MENU = [
+  // WEEK 1
+  [
+    {
+      name:'Chimichurri Chuck Steak Bites',
+      sauce:'House Chimichurri',
+      sides:'Parsnip Purée · Hot Honey Carrots',
+      components:[
+        {name:'Chuck Steak',amount:'6oz',tag:'protein'},
+        {name:'Parsnip Purée',amount:'4oz',tag:'starch'},
+        {name:'Hot Honey Carrots',amount:'4oz',tag:'veg'},
+        {name:'House Chimichurri',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:620,protein:44,carbs:45,fat:28},
+      benefits:[
+        'Chuck steak is high in iron and zinc — key minerals for muscle repair and immune function',
+        'Parsnips are rich in folate, vitamin C, and potassium for heart health',
+        'Carrots provide beta-carotene which converts to Vitamin A for eye and skin health',
+        'Chimichurri is packed with fresh herbs delivering antioxidants and anti-inflammatory compounds',
+      ]
+    },
+    {
+      name:'Herb Grilled Chicken',
+      sauce:'Garlic Coconut Aioli',
+      sides:'Roasted Baby Potatoes · Flash-Seared Green Beans',
+      components:[
+        {name:'Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Roasted Baby Potatoes',amount:'4oz',tag:'starch'},
+        {name:'Flash-Seared Green Beans',amount:'4oz',tag:'veg'},
+        {name:'Garlic Coconut Aioli',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:540,protein:46,carbs:32,fat:22},
+      benefits:[
+        'Chicken thighs provide more iron and zinc than breast meat with superior moisture retention when reheated',
+        'Potatoes are a complete carbohydrate source with significant potassium for muscle function',
+        'Green beans are low-calorie, high-fiber, and rich in Vitamin K for bone health',
+        'Coconut cream contains medium-chain triglycerides (MCTs) that support energy and metabolism',
+      ]
+    },
+    {
+      name:'Turkey Picadillo',
+      sauce:'Sofrito Pan Sauce',
+      sides:'Coconut Rice · Charred Pepper Medley',
+      components:[
+        {name:'Lean Ground Turkey',amount:'6oz',tag:'protein'},
+        {name:'Coconut Rice',amount:'4oz',tag:'starch'},
+        {name:'Charred Pepper Medley',amount:'4oz',tag:'veg'},
+        {name:'Sofrito Pan Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:490,protein:42,carbs:48,fat:14},
+      benefits:[
+        'Ground turkey is one of the leanest protein sources available — low fat, high protein per ounce',
+        'Coconut rice adds lauric acid from coconut milk which supports immune function',
+        'Bell peppers contain more Vitamin C than oranges — critical for collagen and immune response',
+        'Sofrito base (tomato, garlic, onion) delivers lycopene, allicin, and quercetin — powerful antioxidants',
+      ]
+    },
+    {
+      name:'Chipotle Chicken Bowl',
+      sauce:'Chipotle Crema',
+      sides:'Cilantro-Lime Rice · Black Beans · Roasted Corn · Pico de Gallo',
+      components:[
+        {name:'Chipotle Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Cilantro-Lime Rice',amount:'4oz',tag:'starch'},
+        {name:'Black Beans, Corn & Pico',amount:'4oz',tag:'veg'},
+        {name:'Chipotle Crema',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:510,protein:43,carbs:52,fat:16},
+      benefits:[
+        'Black beans are one of the best plant-based protein and fiber sources — supports gut health and satiety',
+        'Corn provides lutein and zeaxanthin — antioxidants that protect eye health',
+        'Chipotle peppers contain capsaicin which boosts metabolism and has anti-inflammatory effects',
+        'Cilantro aids digestion and has natural antimicrobial properties',
+      ]
+    },
+    {
+      name:'Coconut Butter Chicken',
+      sauce:'Coconut Tomato Curry',
+      sides:'Basmati Rice · Fresh Cucumber-Mint Salad',
+      components:[
+        {name:'Tandoor-Spiced Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Basmati Rice',amount:'4oz',tag:'starch'},
+        {name:'Cucumber-Mint Salad',amount:'4oz',tag:'veg'},
+        {name:'Coconut Tomato Curry Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:530,protein:44,carbs:44,fat:20},
+      benefits:[
+        'Turmeric in the curry contains curcumin — one of the most studied anti-inflammatory compounds',
+        'Basmati rice has a lower glycemic index than regular white rice — better for blood sugar management',
+        'Cucumber is 96% water — excellent for hydration and contains Vitamin K for bone health',
+        'Garam masala spice blend contains cinnamon, cloves, and cardamom — all rich in antioxidants',
+      ]
+    },
+    {
+      name:'Habanero Teriyaki Chicken Stir Fry',
+      sauce:'Habanero Teriyaki Glaze',
+      sides:'Lo Mein Noodles · Bell Peppers · Snap Peas · Carrots',
+      components:[
+        {name:'Teriyaki Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Lo Mein Noodles',amount:'4oz',tag:'starch'},
+        {name:'Bell Peppers, Snap Peas, Carrots',amount:'4oz',tag:'veg'},
+        {name:'Habanero Teriyaki Glaze',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:555,protein:43,carbs:58,fat:16},
+      benefits:[
+        'Habanero peppers are among the richest sources of capsaicin — powerful metabolism and circulation booster',
+        'Snap peas provide plant-based iron and Vitamin C to enhance iron absorption',
+        'Ginger and garlic in the stir fry base are proven immune-boosters and anti-inflammatories',
+        'Soy sauce provides umami and trace minerals; use in moderation for sodium management',
+      ]
+    },
+    {
+      name:'Guava Glazed Pork Chop',
+      sauce:'Guava Glaze',
+      sides:'Congri (Black Beans & Rice) · Maduros · Charred Broccoli',
+      components:[
+        {name:'Pork Chop (Cuban Mojo Marinated)',amount:'6oz',tag:'protein'},
+        {name:'Congri (Black Beans & Rice)',amount:'4oz',tag:'starch'},
+        {name:'Maduros & Charred Broccoli',amount:'4oz',tag:'veg'},
+        {name:'Guava Glaze',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:570,protein:42,carbs:55,fat:18},
+      benefits:[
+        'Pork is an excellent source of B vitamins, especially B1 (thiamine) which supports nerve and muscle function',
+        'Guava is one of the richest sources of Vitamin C in any fruit — immune and skin health powerhouse',
+        'Plantains (maduros) provide potassium, Vitamin B6, and complex carbohydrates for sustained energy',
+        'Broccoli is among the most nutrient-dense vegetables — high in sulforaphane, a cancer-protective compound',
+      ]
+    },
+  ],
+  // WEEK 2
+  [
+    {
+      name:'Shrimp Pesto Pasta',
+      sauce:'Creamy Basil Pesto',
+      sides:'Penne Pasta · Blistered Tomatoes',
+      components:[
+        {name:'Grilled Shrimp',amount:'6oz',tag:'protein'},
+        {name:'Penne Pasta',amount:'4oz',tag:'starch'},
+        {name:'Blistered Cherry Tomatoes',amount:'4oz',tag:'veg'},
+        {name:'Creamy Basil Pesto',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:510,protein:40,carbs:50,fat:18},
+      benefits:[
+        'Shrimp is one of the highest protein-per-calorie seafoods — lean, quick-digesting, and rich in iodine',
+        'Basil pesto provides Vitamin K, manganese, and anti-inflammatory eugenol compounds',
+        'Blistered tomatoes concentrate lycopene — the most potent carotenoid for heart and prostate health',
+        'Pine nuts in pesto provide heart-healthy monounsaturated fats and magnesium',
+      ]
+    },
+    {
+      name:'Honey Garlic Chicken Bowl',
+      sauce:'Honey Garlic Glaze',
+      sides:'Roasted Baby Potatoes · Broccoli',
+      components:[
+        {name:'Honey Garlic Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Roasted Baby Potatoes',amount:'4oz',tag:'starch'},
+        {name:'Roasted Broccoli',amount:'4oz',tag:'veg'},
+        {name:'Honey Garlic Glaze',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:520,protein:45,carbs:48,fat:16},
+      benefits:[
+        'Raw honey contains enzymes, antioxidants, and antimicrobial properties beyond just sweetness',
+        'Garlic contains allicin — one of the most well-researched natural compounds for cardiovascular health',
+        'Broccoli provides sulforaphane and indole-3-carbinol — compounds with strong cancer-protective evidence',
+        'Chicken thighs hold up better through reheating than breast, retaining moisture and flavor',
+      ]
+    },
+    {
+      name:'Mediterranean Bowl',
+      sauce:'Tzatziki',
+      sides:'Seasoned Lemon Herb Rice · Cucumber Salsa · Lettuce & Feta',
+      components:[
+        {name:'Greek Chicken Bites',amount:'6oz',tag:'protein'},
+        {name:'Lemon Herb Rice',amount:'4oz',tag:'starch'},
+        {name:'Cucumber Salsa, Lettuce & Feta',amount:'4oz',tag:'veg'},
+        {name:'House Tzatziki',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:500,protein:44,carbs:42,fat:18},
+      benefits:[
+        'Greek yogurt tzatziki is high in probiotics — supports gut microbiome and immune function',
+        'Cucumber is anti-inflammatory and contains silica which supports joint and connective tissue health',
+        'Feta provides calcium and phosphorus for bone density with a lower fat content than most cheeses',
+        'Lemon zest and juice activate digestive enzymes and are rich in flavonoids',
+      ]
+    },
+    {
+      name:'Honey Harissa Chicken',
+      sauce:'Harissa Yogurt Drizzle',
+      sides:'Coconut Saffron Rice · Red Beans · Roasted Carrots',
+      components:[
+        {name:'Harissa-Marinated Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Coconut Saffron Rice',amount:'4oz',tag:'starch'},
+        {name:'Red Beans & Roasted Carrots',amount:'4oz',tag:'veg'},
+        {name:'Harissa Yogurt Drizzle',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:530,protein:44,carbs:50,fat:16},
+      benefits:[
+        'Harissa chili paste contains capsaicin and vitamin C — thermogenic and immune-boosting',
+        'Saffron has been shown to support mood and reduce anxiety — one of the most bioactive spices',
+        'Red beans are high in resistant starch — feeds beneficial gut bacteria and improves insulin sensitivity',
+        'Roasted carrots increase beta-carotene bioavailability compared to raw',
+      ]
+    },
+    {
+      name:'Spicy Taco Shrimp Bowl',
+      sauce:'Chipotle Lime Crema',
+      sides:'Brown Rice · Black Beans · Roasted Corn · Pico · Cheese',
+      components:[
+        {name:'Taco-Spiced Shrimp',amount:'6oz',tag:'protein'},
+        {name:'Brown Rice',amount:'4oz',tag:'starch'},
+        {name:'Black Beans, Corn, Pico & Cheese',amount:'4oz',tag:'veg'},
+        {name:'Chipotle Lime Crema',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:500,protein:40,carbs:55,fat:16},
+      benefits:[
+        'Brown rice retains the bran layer, providing 3x more fiber than white rice and higher magnesium',
+        'Shrimp is one of the few food sources of astaxanthin — a powerful antioxidant for skin and eye health',
+        'Black beans and corn together form a complete amino acid profile — excellent plant protein pairing',
+        'Lime juice enhances iron absorption from plant sources — critical for energy and red blood cell production',
+      ]
+    },
+    {
+      name:'Italian Herb Salmon',
+      sauce:'Lemon Herb Butter',
+      sides:'Quinoa · Roasted Brussels Sprouts',
+      components:[
+        {name:'Italian Herb Salmon Fillet',amount:'6oz',tag:'protein'},
+        {name:'Quinoa',amount:'4oz',tag:'starch'},
+        {name:'Roasted Brussels Sprouts',amount:'4oz',tag:'veg'},
+        {name:'Lemon Herb Butter',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:545,protein:46,carbs:36,fat:24},
+      benefits:[
+        'Salmon is the gold standard for omega-3 fatty acids — reduces inflammation, supports brain and heart health',
+        'Quinoa is one of the only plant-based complete proteins — contains all 9 essential amino acids',
+        'Brussels sprouts are rich in sulforaphane, glucosinolates, and Vitamin K — among the most protective vegetables',
+        'Vitamin D in salmon supports bone density, immune function, and testosterone production',
+      ]
+    },
+    {
+      name:'Grilled Chicken Bites with Gravy',
+      sauce:'Savory Gravy',
+      sides:'Creamy Mashed Potato · Sweet Corn · Melted Cheese',
+      components:[
+        {name:'Grilled Chicken Thigh Bites',amount:'6oz',tag:'protein'},
+        {name:'Creamy Mashed Potato',amount:'4oz',tag:'starch'},
+        {name:'Sweet Corn & Cheese',amount:'4oz',tag:'veg'},
+        {name:'Savory Chicken Gravy',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:560,protein:45,carbs:48,fat:20},
+      benefits:[
+        'Chicken thighs provide taurine — an amino acid that supports heart function and electrolyte balance',
+        'Potatoes contain resistant starch when cooled — acts as prebiotic fiber for gut health',
+        'Corn provides insoluble fiber that supports digestive regularity and healthy cholesterol levels',
+        'Cheese adds calcium, phosphorus, and casein protein — slow-digesting for sustained satiety',
+      ]
+    },
+  ],
+  // WEEK 3
+  [
+    {
+      name:'Southwest Chicken Bowl',
+      sauce:'Chipotle Lime Sauce',
+      sides:'Couscous · Black Beans · Roasted Corn · Tomatoes & Peppers',
+      components:[
+        {name:'Southwest-Spiced Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Couscous',amount:'4oz',tag:'starch'},
+        {name:'Black Beans, Corn, Tomatoes & Peppers',amount:'4oz',tag:'veg'},
+        {name:'Chipotle Lime Sauce',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:510,protein:44,carbs:52,fat:14},
+      benefits:[
+        'Couscous is a fast-digesting carbohydrate ideal for post-workout glycogen replenishment',
+        'Bell peppers and tomatoes together deliver Vitamins A, C, and E — a complete antioxidant trio',
+        'Cumin supports digestion and has been shown to improve markers of metabolic syndrome',
+        'Black beans provide folate critical for cell repair and DNA synthesis',
+      ]
+    },
+    {
+      name:'Pepper Steak Stir Fry',
+      sauce:'Black Pepper Garlic Sauce',
+      sides:'Coconut Rice · Seasonal Stir-Fry Vegetables',
+      components:[
+        {name:'Sliced Flank Steak',amount:'6oz',tag:'protein'},
+        {name:'Coconut Rice',amount:'4oz',tag:'starch'},
+        {name:'Seasonal Stir-Fry Vegetables',amount:'4oz',tag:'veg'},
+        {name:'Black Pepper Garlic Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:560,protein:44,carbs:46,fat:20},
+      benefits:[
+        'Flank steak is lean, high in creatine and carnitine — compounds that directly support muscle performance',
+        'Black pepper contains piperine which enhances absorption of nearly every nutrient in the meal',
+        'Garlic lowers LDL cholesterol and blood pressure with consistent consumption',
+        'Coconut rice MCTs provide fast-burning energy without spiking blood sugar dramatically',
+      ]
+    },
+    {
+      name:'Fish Taco Bowl',
+      sauce:'Chipotle Crema',
+      sides:'Cilantro-Lime Rice · Island Slaw',
+      components:[
+        {name:'Seasoned Cod Fillet',amount:'6oz',tag:'protein'},
+        {name:'Cilantro-Lime Rice',amount:'4oz',tag:'starch'},
+        {name:'Island Slaw',amount:'4oz',tag:'veg'},
+        {name:'Chipotle Crema',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:460,protein:40,carbs:46,fat:14},
+      benefits:[
+        'Cod is one of the leanest fish proteins — high protein, very low fat, rich in B12 and phosphorus',
+        'Cabbage slaw provides glucosinolates and Vitamin C — fermented slaw adds probiotic benefit',
+        'Cilantro has been shown to help chelate heavy metals and support liver detoxification',
+        'Lime juice in the rice brightens the dish and provides Vitamin C to enhance iron absorption from fish',
+      ]
+    },
+    {
+      name:'Hoisin Turkey Meatballs',
+      sauce:'Hoisin Glaze',
+      sides:'Steamed Cabbage · Roasted Sweet Potatoes',
+      components:[
+        {name:'Turkey Meatballs',amount:'6oz',tag:'protein'},
+        {name:'Roasted Sweet Potatoes',amount:'4oz',tag:'starch'},
+        {name:'Steamed Cabbage',amount:'4oz',tag:'veg'},
+        {name:'Hoisin Glaze',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:500,protein:42,carbs:50,fat:14},
+      benefits:[
+        'Sweet potatoes are exceptionally high in beta-carotene and Vitamin A — eye and immune health',
+        'Hoisin sauce contains fermented soybean paste which provides probiotics and umami depth',
+        'Cabbage is anti-inflammatory and one of the most affordable, nutrient-dense vegetables available',
+        'Turkey is high in tryptophan — a precursor to serotonin that supports mood and sleep quality',
+      ]
+    },
+    {
+      name:'Herb Grilled Chicken',
+      sauce:'Garlic Coconut Aioli',
+      sides:'Yuca Mash · Flash-Seared Green Beans',
+      components:[
+        {name:'Herb-Marinated Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Yuca Mash',amount:'4oz',tag:'starch'},
+        {name:'Flash-Seared Green Beans',amount:'4oz',tag:'veg'},
+        {name:'Garlic Coconut Aioli',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:530,protein:45,carbs:44,fat:20},
+      benefits:[
+        'Yuca (cassava) is naturally gluten-free and provides resistant starch for gut health',
+        'Fresh rosemary and thyme are high in rosmarinic acid — a potent antioxidant and anti-inflammatory',
+        'Green beans provide silicon — a trace mineral essential for collagen synthesis and bone matrix',
+        'Coconut aioli provides MCTs that support cognitive function and sustained energy',
+      ]
+    },
+    {
+      name:'Jerk Chicken Pasta',
+      sauce:'Jerk Cream Sauce',
+      sides:'Penne Pasta · Sautéed Peppers & Onions · Broccoli',
+      components:[
+        {name:'Jerk-Marinated Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Penne Pasta',amount:'4oz',tag:'starch'},
+        {name:'Peppers, Onions & Broccoli',amount:'4oz',tag:'veg'},
+        {name:'Jerk Cream Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:570,protein:45,carbs:55,fat:18},
+      benefits:[
+        'Scotch bonnet peppers in jerk seasoning are among the most capsaicin-rich peppers — powerful metabolism boost',
+        'Allspice, thyme, and cinnamon in jerk blend are rich in antioxidants and antimicrobial compounds',
+        'Broccoli in pasta adds sulforaphane that activates detoxification enzymes in the liver',
+        'Onions provide quercetin — an anti-histamine and anti-inflammatory flavonoid',
+      ]
+    },
+    {
+      name:'Steak Fajita Bowl',
+      sauce:'Lime Crema',
+      sides:'Lime Rice · Sautéed Bell Peppers & Onions · Black Beans',
+      components:[
+        {name:'Flank Steak (chili-cumin seasoned)',amount:'6oz',tag:'protein'},
+        {name:'Lime Rice',amount:'4oz',tag:'starch'},
+        {name:'Bell Peppers, Onions & Black Beans',amount:'4oz',tag:'veg'},
+        {name:'Lime Crema',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:545,protein:44,carbs:50,fat:18},
+      benefits:[
+        'Flank steak provides heme iron — the most bioavailable form of iron for energy and red blood cell production',
+        'Cumin is one of the richest plant sources of iron and has been shown to improve blood sugar control',
+        'Bell peppers provide more Vitamin C per serving than most citrus fruits',
+        'Black beans add 8g of fiber per half-cup — supporting cholesterol reduction and digestive health',
+      ]
+    },
+  ],
+  // WEEK 4
+  [
+    {
+      name:'Rasta Pasta',
+      sauce:'Jerk Cream Sauce',
+      sides:'Penne Pasta · Tri-Color Peppers & Onions',
+      components:[
+        {name:'Jerk Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Penne Pasta',amount:'4oz',tag:'starch'},
+        {name:'Tri-Color Peppers & Onions',amount:'4oz',tag:'veg'},
+        {name:'Jerk Coconut Cream Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:570,protein:45,carbs:55,fat:18},
+      benefits:[
+        'Jerk spice blend activates thermogenesis — your body burns more calories digesting capsaicin-rich food',
+        'Tri-color peppers provide Vitamins A, C, and E in one serving — rare to get all three from one vegetable',
+        'Coconut cream provides lauric acid — converts to monolaurin which has antiviral and antibacterial properties',
+        'Pasta provides complex carbohydrates that digest slowly, supporting sustained energy and workout performance',
+      ]
+    },
+    {
+      name:'Floribbean Bowl',
+      sauce:'Garlic Herb Sauce',
+      sides:'Floribbean Rice · Ropa Vieja · Garlic Green Beans',
+      components:[
+        {name:'Slow-Braised Ropa Vieja',amount:'6oz',tag:'protein'},
+        {name:'Floribbean Signature Rice',amount:'4oz',tag:'starch'},
+        {name:'Garlic Green Beans',amount:'4oz',tag:'veg'},
+        {name:'Garlic Herb Braising Jus',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:540,protein:44,carbs:46,fat:18},
+      benefits:[
+        'Braised beef becomes more bioavailable in nutrients — collagen breaks down into gelatin supporting joint health',
+        'Slow-cooking extracts minerals like calcium, magnesium, and phosphorus into the braising liquid',
+        'Green beans sautéed in garlic oil provide Vitamin K and silicon for bone and connective tissue health',
+        'This is the signature Floribbean dish — Latin soul food at its most intentional',
+      ]
+    },
+    {
+      name:'Turkey Sofrito Meatballs',
+      sauce:'House Sofrito',
+      sides:'Jasmine Rice · Shredded Jerk Cabbage',
+      components:[
+        {name:'Turkey Sofrito Meatballs',amount:'6oz',tag:'protein'},
+        {name:'Jasmine Rice',amount:'4oz',tag:'starch'},
+        {name:'Shredded Jerk Cabbage',amount:'4oz',tag:'veg'},
+        {name:'House Sofrito Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:490,protein:42,carbs:46,fat:14},
+      benefits:[
+        'Sofrito base of tomato, garlic, onion, and cilantro delivers a broad spectrum of polyphenols',
+        'Jerk cabbage provides indole-3-carbinol — shown to support hormonal balance and reduce inflammation',
+        'Turkey meatballs are lower in saturated fat than beef while providing comparable protein density',
+        'Jasmine rice provides fast-digesting carbohydrates ideal for post-workout recovery timing',
+      ]
+    },
+    {
+      name:'Garlic Butter Steak & Mash',
+      sauce:'Light Garlic Butter Sauce',
+      sides:'Creamy Parsnip Purée · Roasted Brussels Sprouts',
+      components:[
+        {name:'Diced Lean Steak (seared crisp)',amount:'6oz',tag:'protein'},
+        {name:'Creamy Parsnip Purée',amount:'4oz',tag:'starch'},
+        {name:'Roasted Brussels Sprouts',amount:'4oz',tag:'veg'},
+        {name:'Light Garlic Butter Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:555,protein:44,carbs:38,fat:24},
+      benefits:[
+        'Lean steak cut into small pieces increases surface area for better seasoning and more even cooking',
+        'Parsnips are uniquely high in folate and polyacetylenes — compounds with cancer-protective properties',
+        'Brussels sprouts contain 3,3-diindolylmethane (DIM) which supports hormone metabolism and liver health',
+        'Butter provides fat-soluble Vitamins A, D, E, and K2 — often missing from low-fat diets',
+      ]
+    },
+    {
+      name:'Cajun Chicken',
+      sauce:'Cajun Drizzle',
+      sides:'Coriander Lime Rice · Sautéed Fajita Vegetables',
+      components:[
+        {name:'Cajun-Spiced Chicken Thigh',amount:'6oz',tag:'protein'},
+        {name:'Coriander Lime Rice',amount:'4oz',tag:'starch'},
+        {name:'Sautéed Fajita Vegetables',amount:'4oz',tag:'veg'},
+        {name:'Cajun Drizzle',amount:'Side cup',tag:'sauce'},
+      ],
+      macros:{cal:510,protein:45,carbs:44,fat:16},
+      benefits:[
+        'Cajun spice blend contains paprika, cayenne, and thyme — all high in antioxidants and anti-inflammatory compounds',
+        'Coriander seeds in the rice are proven to lower blood sugar and support healthy digestion',
+        'Fajita vegetables (peppers and onions) are rich in quercetin and Vitamin C for immune support',
+        'Lime zest in the rice contains flavonoids and limonoids shown to have anti-cancer properties',
+      ]
+    },
+    {
+      name:'Orange Sriracha Shrimp',
+      sauce:'Orange Sriracha Glaze',
+      sides:'White Jasmine Rice · Steamed Broccoli',
+      components:[
+        {name:'Orange Sriracha Shrimp',amount:'6oz',tag:'protein'},
+        {name:'Jasmine Rice',amount:'4oz',tag:'starch'},
+        {name:'Steamed Broccoli',amount:'4oz',tag:'veg'},
+        {name:'Orange Sriracha Glaze',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:440,protein:40,carbs:48,fat:10},
+      benefits:[
+        'Shrimp is one of the lowest-calorie protein sources — 6oz provides 40g protein at under 200 calories before sides',
+        'Orange zest and juice provide flavonoids and hesperidin — shown to improve circulation and reduce inflammation',
+        'Sriracha fermented chili provides probiotics alongside capsaicin for gut and metabolic health',
+        'Steamed broccoli retains more Vitamin C and sulforaphane than roasted — maximum nutrient density',
+      ]
+    },
+    {
+      name:'Ground Turkey Spicy Garlic Noodles',
+      sauce:'Spicy Garlic Soy Sauce',
+      sides:'Lo Mein or Ramen Noodles · Seasonal Vegetables',
+      components:[
+        {name:'Seasoned Ground Turkey',amount:'6oz',tag:'protein'},
+        {name:'Lo Mein Noodles',amount:'4oz',tag:'starch'},
+        {name:'Seasonal Stir-Fry Vegetables',amount:'4oz',tag:'veg'},
+        {name:'Spicy Garlic Soy Sauce',amount:'Built in',tag:'sauce'},
+      ],
+      macros:{cal:510,protein:42,carbs:52,fat:14},
+      benefits:[
+        'Ground turkey cooks evenly and absorbs sauce deeply — one of the best proteins for noodle dishes',
+        'Garlic in the sauce provides allicin that peaks in potency 10 minutes after crushing — let it rest before cooking',
+        'Lo mein noodles provide complex carbohydrates that fuel sustained training sessions',
+        'Red pepper flakes provide capsaicin that increases thermogenesis by up to 5% post-meal',
+      ]
+    },
+  ]
+];
+
+function buildDays(weekIndex){
+  const container=document.getElementById('days-'+weekIndex);
+  if(!container||container.children.length>0)return;
+  const meals=MENU[weekIndex];
+  meals.forEach((meal,i)=>{
+    const row=document.createElement('div');
+    row.className='day-row';
+    row.innerHTML=`
+      <div class="meal-trigger" onclick="toggleMeal(this.parentElement)">
+        <div class="day-label">${DAYS[i]}</div>
+        <div class="meal-info">
+          <div class="meal-name">${meal.name}</div>
+          <div class="meal-sides">${meal.sides}</div>
+        </div>
+        <div class="meal-chevron">▼</div>
+      </div>
+      <div class="meal-dropdown">
+        <hr class="dd-divider">
+        <div class="sauce-pill">Sauce: ${meal.sauce}</div>
+        <div class="macro-row">
+          <div class="macro-box"><div class="macro-val">${meal.macros.cal}</div><div class="macro-label">Calories</div></div>
+          <div class="macro-box"><div class="macro-val">${meal.macros.protein}g</div><div class="macro-label">Protein</div></div>
+          <div class="macro-box"><div class="macro-val">${meal.macros.carbs}g</div><div class="macro-label">Carbs</div></div>
+          <div class="macro-box"><div class="macro-val">${meal.macros.fat}g</div><div class="macro-label">Fat</div></div>
+        </div>
+        <div class="dd-grid">
+          <div>
+            <div class="dd-section-title">What's in it</div>
+            <div class="comp-list">
+              ${meal.components.map(c=>`
+                <div class="comp-item">
+                  <span class="comp-name">${c.name}<span class="comp-tag ${c.tag}">${c.tag}</span></span>
+                  <span class="comp-amount">${c.amount}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div>
+            <div class="dd-section-title">Health benefits</div>
+            <div class="benefits-list">
+              ${meal.benefits.map(b=>`
+                <div class="benefit-item"><div class="benefit-dot"></div>${b}</div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function toggleMeal(row){
+  const isOpen=row.classList.contains('open');
+  document.querySelectorAll('.day-row.open').forEach(r=>r.classList.remove('open'));
+  if(!isOpen)row.classList.add('open');
+}
+
+function showWeek(index){
+  document.querySelectorAll('.week-panel').forEach((p,i)=>{
+    p.classList.toggle('active',i===index);
+  });
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',i===index);
+  });
+  buildDays(index);
+  window.scrollTo({top:document.querySelector('.tabs-wrap').offsetTop-10,behavior:'smooth'});
+}
+
+// Build week 1 on load
+buildDays(0);
+</script>
+</body>
+</html>
